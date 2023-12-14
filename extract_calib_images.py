@@ -56,23 +56,23 @@ while(True):
                 gray_1, corners_1, search_window_size, (-1, -1), criteria
             )
             # Draw the corners and store the images
-            img_0 = cv2.drawChessboardCorners(img_0, (cbcol, cbrow), corners_0, ret_0)
-            img_1 = cv2.drawChessboardCorners(img_1, (cbcol, cbrow), corners_1, ret_1)
+            _img_0 = cv2.drawChessboardCorners(img_0.copy(), (cbcol, cbrow), corners_0, ret_0)
+            _img_1 = cv2.drawChessboardCorners(img_1.copy(), (cbcol, cbrow), corners_1, ret_1)
             f1, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
             f1.suptitle(
                 str("Check that each checkboard image is identified consistently"),
                 fontsize=25,
             )
             # Display images in RGB
-            ax1.imshow(cv2.cvtColor(img_0, cv2.COLOR_BGR2RGB))
-            ax2.imshow(cv2.cvtColor(img_1, cv2.COLOR_BGR2RGB))
+            ax1.imshow(cv2.cvtColor(_img_0, cv2.COLOR_BGR2RGB))
+            ax2.imshow(cv2.cvtColor(_img_1, cv2.COLOR_BGR2RGB))
             f1.show()
-            good_or_bad = input("good (g) or bad (b) checkerboard pair?")
+            good_or_bad = input("good (g) or bad (b) checkerboard pair? ")
             if good_or_bad == 'g':
-                fname = f"camera-0-{good_img_c}.jpg"
-                fname = f"camera-1-{good_img_c}.jpg"
-                cv2.imwrite(fname, img_0)
-                cv2.imwrite(fname, img_1)
+                fname_0 = f"camera-1-{good_img_c}.jpg"
+                fname_1 = f"camera-2-{good_img_c}.jpg"
+                cv2.imwrite(fname_0, img_0)
+                cv2.imwrite(fname_1, img_1)
                 good_img_c += 1
     else:
         vids[0].release()

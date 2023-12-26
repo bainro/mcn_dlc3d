@@ -204,7 +204,7 @@ for i in range(len(df_1)):
     vid.write(img)
 vid.release()
 
-# @TODO combine the 2 camera videos and 3D reconstructed wireframe side-by-side
+# combines the 3 videos side-by-side
 combined_vid = cv2.VideoWriter('combined.avi', fourcc, fps, (w*3, h)) 
 video_1 = cv2.VideoCapture(video_path_1)
 video_2 = cv2.VideoCapture(video_path_2)

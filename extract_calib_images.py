@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 cv2.destroyAllWindows() 
 
 help_str = "pass both camera files on the command line (relative path)"
-assert len(sys.argv) == 3, help_str
+assert len(sys.argv) >= 3, help_str
 cam_file_1 = os.path.join(os.getcwd(), sys.argv[1])
 cam_file_2 = os.path.join(os.getcwd(), sys.argv[2])
 
@@ -55,6 +55,29 @@ while(True):
             corners_1 = cv2.cornerSubPix(
                 gray_1, corners_1, search_window_size, (-1, -1), criteria
             )
+            fname_0 = f"camera-1-{good_img_c}.jpg"
+            fname_1 = f"camera-2-{good_img_c}.jpg"
+            
+            # cheaty little hack for myself
+            # if the corners are detected and rotated then it's assumed good!
+            if len(sys.argv) == 4:
+                # for the first camera
+                to_the_left = corners_0[0][0][0] < corners_0[-1][0][0]
+                above = corners_0[0][0][1] < corners_0[-1][0][1]
+                good_1st = to_the_left and above
+                # for the second camera
+                to_the_right = corners_1[0][0][0] > corners_1[-1][0][0]
+                above = corners_1[0][0][1] < corners_1[-1][0][1]
+                good_2nd = to_the_right and above
+                
+                both_good = good_1st and good_2nd
+                if both_good:
+                    print("good!")
+                    cv2.imwrite(fname_0, img_0)
+                    cv2.imwrite(fname_1, img_1)
+                    good_img_c += 1
+                continue
+            
             # Draw the corners and store the images
             _img_0 = cv2.drawChessboardCorners(img_0.copy(), (cbcol, cbrow), corners_0, ret_0)
             _img_1 = cv2.drawChessboardCorners(img_1.copy(), (cbcol, cbrow), corners_1, ret_1)
@@ -69,8 +92,6 @@ while(True):
             f1.show()
             good_or_bad = input("good (g) or bad (b) checkerboard pair? ")
             if good_or_bad == 'g':
-                fname_0 = f"camera-1-{good_img_c}.jpg"
-                fname_1 = f"camera-2-{good_img_c}.jpg"
                 cv2.imwrite(fname_0, img_0)
                 cv2.imwrite(fname_1, img_1)
                 good_img_c += 1

@@ -1,20 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-calibrate stereo cameras
-
-!pip install deeplabcut[tf,modelzoo]==2.3.3
-!pip install dlclibrary==0.0.4 --force-reinstall
-"""
-
 import os
 import cv2
-import random
 import deeplabcut
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from deeplabcut.utils import auxiliaryfunctions
 
+os.chdir("/home/rbain/git/mcn_dlc3d")
 _tmp = os.path.join("./", "tmp/")
 os.makedirs(_tmp, exist_ok=True)
 
@@ -24,7 +16,8 @@ labeler = 'rob_bain'
 save_dir = f'{project}-{labeler}-2023-12-25-3d'
 conf_path_3d = os.path.join(_tmp, save_dir, 'config.yaml')
 
-### for creating a new project #@TODO make this hands-free, not hard-coded...
+### for creating a new project 
+#@TODO make this hands-free, not hard-coded...
 # deeplabcut.create_new_project_3d(project, labeler, num_cameras=2)
 
 # calibrate=True assumes that you've already viewed and filtered your calibration images
@@ -45,7 +38,7 @@ video_name_1 = os.path.splitext(video_path_1)[0]
 video_name_2 = os.path.splitext(video_path_2)[0]
 
 supermodel_name = "superanimal_topviewmouse"
-pcutoff = 0.9
+pcutoff = 0.95
 videotype = os.path.splitext(video_path_1)[1]
 scale_list = []
 
@@ -65,17 +58,18 @@ print(f'video frames: {frame_count}')
 duration = frame_count / fps
 h = int(video_1.get(cv2.CAP_PROP_FRAME_HEIGHT))
 w = int(video_1.get(cv2.CAP_PROP_FRAME_WIDTH))
-short_video_path_1 = "/tmp/short_1.avi"
-short_video_path_2 = "/tmp/short_2.avi"
-# clean up the previous time it ran
-for f in os.listdir("/tmp"):
-    if "short" in f:
-        os.remove(os.path.join("/tmp", f))
-dur_cutoff = 30
+dur_cutoff = 5
 if duration > dur_cutoff:
     print(f"video duration too long, making {dur_cutoff} sec trimmed copy")
+    # clean up the previous time it ran.
+    # can be turned off, most useful for debugging
+    for f in os.listdir("/tmp"):
+        if "short" in f:
+            os.remove(os.path.join("/tmp", f))
     vid_frames = 0
     fourcc = 0
+    short_video_path_1 = "/tmp/short_1.avi"
+    short_video_path_2 = "/tmp/short_2.avi"
     short_video_1 = cv2.VideoWriter(short_video_path_1, fourcc, fps, (w,h))
     short_video_2 = cv2.VideoWriter(short_video_path_2, fourcc, fps, (w,h))
     while(vid_frames < dur_cutoff * fps):
@@ -103,6 +97,7 @@ deeplabcut.video_inference_superanimal(
     video_adapt=True,
     scale_list=scale_list,
     pcutoff=pcutoff,
+    pseudo_threshold=0.9
 )
 
 path_camera_matrix = os.path.join(_tmp, save_dir, "camera_matrix/")
@@ -112,21 +107,21 @@ stereo_info = stereo_file['camera-1-camera-2']
 P1 = stereo_info['P1']
 P2 = stereo_info['P2']
 
-# colormap = plt.get_cmap("jet")
-# col = colormap(np.linspace(0, 1, triangulate.shape[0]))
-markerSize = 15
-markerType = '*'
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-recon_path = '3d_reconstruction.avi'
-vid = cv2.VideoWriter(recon_path, fourcc, fps, (w, h)) 
-
 predictions_1 = os.path.join(video_name_1 + 'DLC_snapshot-1000.h5')
 predictions_2 = os.path.join(video_name_2 + 'DLC_snapshot-1000.h5')
 
 df_1 = pd.read_hdf(predictions_1)
 df_2 = pd.read_hdf(predictions_2)
 
-_xs, _ys, _zs = [], [], []
+colormap = plt.get_cmap("jet")
+col = colormap(np.linspace(0, 1, round(len(df_1.iloc[0]) / 3)))
+markerSize = 18
+markerType = '*'
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+recon_path = '3d_reconstruction.avi'
+vid = cv2.VideoWriter(recon_path, fourcc, fps, (w, h)) 
+
+all_filtered_ids = []
 for i in range(len(df_1)):
     x_1, x_2 = [], []
     y_1, y_2 = [], []
@@ -143,13 +138,14 @@ for i in range(len(df_1)):
         y_2.append(frame[j+1])
         prob_2.append(frame[j+2])
 
-    num_rm_so_far = 0
+    # @TODO Probability weighted multiple camera voting?
+    # @TODO convert to fake dlc3d .h5 output. Label missing pts 0 confidence
+
+    filtered_ids = []
     for j, (p1, p2) in enumerate(zip(prob_1, prob_2)):
         if p1 < pcutoff or p2 < pcutoff:
-            del x_1[j], x_2[j]
-            del y_1[j], y_2[j]
-            del prob_1[j], prob_2[j]
-            num_rm_so_far += 1
+            filtered_ids.append(j)
+            all_filtered_ids.append(j)
     
     x1_and_y1 = cv2.undistortPoints(
         src=np.array(list(zip(x_1, y_1))),
@@ -174,6 +170,9 @@ for i in range(len(df_1)):
     y_2 = np.squeeze(x2_and_y2[:,:,1])
     
     fig = plt.figure()
+    num_possible = round(len(df_1.iloc[0]) / 3)
+    num_detected = num_possible - len(filtered_ids)
+    fig.title(f'{num_detected} out of {num_possible} possible pts detected above {pcutoff} confidence')
     ax = fig.add_subplot(111, projection="3d")
     ### @TODO automate this so it'll work on any dataset. Yoink from dlc
     ### don't worry about perfection, this is just verification for kypt-moseq
@@ -185,6 +184,8 @@ for i in range(len(df_1)):
     ax.set_zlabel("Z")
     ax.view_init(-113, -200)
     for j in range(len(x_1)):
+        if j in filtered_ids:
+            continue
         cam1_pts = np.array([x_1[j], y_1[j]]).T
         cam2_pts = np.array([x_2[j], y_2[j]]).T
         _3d_pt = cv2.triangulatePoints(P1[:3], P2[:3], cam1_pts, cam2_pts)
@@ -192,17 +193,19 @@ for i in range(len(df_1)):
         xs = _3d_pt[0]
         ys = _3d_pt[1]
         zs = _3d_pt[2]
-        _xs.append(xs)
-        _ys.append(ys)
-        _zs.append(zs)
-        #ax.scatter(xs, ys, zs, c=col[j], marker=markerType, s=markerSize)
-        ax.scatter(xs, ys, zs, c=[0,0,0], marker=markerType, s=markerSize)
+        ax.scatter(xs, ys, zs, c=col[j], marker=markerType, s=markerSize)
     plt.savefig("/tmp/_.png")
     plt.close()
     img = cv2.imread("/tmp/_.png")
     img = cv2.resize(img, (w, h))
     vid.write(img)
 vid.release()
+
+print("Keypoint filter counts:")
+filtered_count = [0] * round(len(df_1.iloc[0]) / 3)
+for i in all_filtered_ids:
+    filtered_count[i] += 1
+print(list(zip(range(len(filtered_count)), filtered_count)))
 
 # combines the 3 videos side-by-side
 combined_vid = cv2.VideoWriter('combined.avi', fourcc, fps, (w*3, h)) 

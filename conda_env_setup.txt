@@ -1,0 +1,11 @@
+conda create --name=dlc_gpu python=3.9
+conda activate dlc_gpu
+conda install -c conda-forge cudatoolkit=11.2.2 cudnn=8.1.0
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+python3 -m pip install tensorflow==2.10
+python3 -c "import os; os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'; import tensorflow as tf; print('Num GPUs Available: ', len(tf.config.list_physical_devices('GPU')))"
+conda install spyder
+spyder --new-instance -p ./
+set CUDA_VISIBLE_DEVICES=1
+python -m pip install -r ../DeepLabCut/requirements.txt

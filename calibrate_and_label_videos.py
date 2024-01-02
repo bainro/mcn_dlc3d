@@ -19,6 +19,8 @@ from deeplabcut.utils import auxiliaryfunctions
 from extract_calib_images import extract_calib
 _help = "Wrong version of dlclibrary. Not 0.0.4"
 assert dlclibrary.__version__ == '0.0.4', _help
+_help = "Wrong version of deeplabcut. Not 2.3.5"
+assert deeplabcut.__version__ == '2.3.5', _help
 
 def rm_unpaired_calib(calib_dir):
     calib_imgs = os.listdir(calib_dir)
@@ -212,7 +214,7 @@ for conf_i, ext in enumerate(extensions):
             reuse_labels = ('Y' in reuse_labels) or ('y' in reuse_labels)
         if not reuse_labels:
             deeplabcut.video_inference_superanimal(
-                vid_lis,
+                [video_path_1, video_path_2],
                 supermodel_name,
                 videotype=videotype,
                 video_adapt=True,

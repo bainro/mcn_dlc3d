@@ -88,7 +88,7 @@ try:
                 print(f'last {FPS} frames took {elapsed:.1f} seconds')
             last_time = now
         # @TODO make interactive without slowing down FPS
-        if frame_i > 10000:
+        if frame_i > 100:#00:
             break
         # potential_key = cv2.waitKey(1)
         # if potential_key & 0xFF == ord('q'):

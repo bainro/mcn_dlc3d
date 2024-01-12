@@ -19,9 +19,9 @@ try:
             temp_camera = cv2.VideoCapture(i, cv2.CAP_DSHOW)
         else:
             temp_camera = cv2.VideoCapture(i)
+        temp_camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         # @TODO ensure the final FPS is actually close to this!
         temp_camera.set(cv2.CAP_PROP_FPS, FPS) 
-        temp_camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         i += 1
         # print("\n", temp_camera.isOpened(), "\n")
         is_cam = temp_camera.isOpened()

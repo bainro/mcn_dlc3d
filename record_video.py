@@ -67,6 +67,11 @@ try:
     frame_i = 0
     last_time = None
     start_time = time.time()
+
+    # sometimes first frame is way early wrt later frames
+    for i, (v, c) in enumerate(zip(vids, cams)): 
+        ret, frame = c.read()
+    
     while(True): 
         # @TODO can speed up a lot by making the screen grabs asynchronous instead 
         #       of waiting for each frame to finish before starting another

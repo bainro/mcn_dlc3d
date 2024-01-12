@@ -64,7 +64,6 @@ try:
         vid = cv2.VideoWriter(wrong_fps_vid, fourcc, FPS, (w, h)) 
         vids.append(vid)
 
-    print(123)
     frame_i = 0
     last_time = None
     start_time = time.time()
@@ -72,7 +71,9 @@ try:
         # @TODO can speed up a lot by making the screen grabs asynchronous instead 
         #       of waiting for each frame to finish before starting another
         for i, (v, c) in enumerate(zip(vids, cams)): 
+            print(123)
             ret, frame = c.read()
+            print(234)
             v.write(frame)
         frame_i += 1
         if not frame_i % FPS:

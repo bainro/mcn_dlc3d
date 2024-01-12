@@ -52,13 +52,11 @@ try:
         print("Otherwise the corner points might not be detected consistently across images.")
     
     vids = []
-    FPS = 60 # naive assumption; corrected below
+    FPS = 15 # naive assumption; corrected below
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     for c_i, c in enumerate(cams):
         w = int(c.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(c.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        # @TODO ensure the final FPS is actually close to this!
-        c.set(cv2.CAP_PROP_FPS, FPS) 
         if is_calib:
             wrong_fps_vid = f'camera_{c_i+1}_calib.avi'
         else:

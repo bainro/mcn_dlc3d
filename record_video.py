@@ -81,9 +81,12 @@ try:
                 elapsed = now - last_time
                 print(f'last {FPS} frames took {elapsed:.1f} seconds')
             last_time = now
-        potential_key = cv2.waitKey(1)
-        if potential_key & 0xFF == ord('q'):
+        # @TODO make interactive without slowing down FPS
+        if len(vids[0]) > 240:
             break
+        # potential_key = cv2.waitKey(1)
+        # if potential_key & 0xFF == ord('q'):
+        #    break
     elapsed_t = time.time() - start_time
     print(f"True seconds recorded: {elapsed_t:.1f}")
     true_fps = round(frame_i / elapsed_t)

@@ -63,7 +63,8 @@ try:
             wrong_fps_vid = f'camera_{c_i+1}.avi'
         vid = cv2.VideoWriter(wrong_fps_vid, fourcc, FPS, (w, h)) 
         vids.append(vid)
-    
+
+    print(123)
     frame_i = 0
     last_time = None
     start_time = time.time()

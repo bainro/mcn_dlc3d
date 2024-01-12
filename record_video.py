@@ -68,7 +68,7 @@ try:
     last_time = None
     start_time = time.time()
 
-    # sometimes first few frame is way early wrt later frames
+    # first few frames are way earlier wrt correct, later frames
     for _i in range(10):
         for i, (v, c) in enumerate(zip(vids, cams)): 
             ret, frame = c.read()
@@ -88,7 +88,7 @@ try:
                 print(f'last {FPS} frames took {elapsed:.1f} seconds')
             last_time = now
         # @TODO make interactive without slowing down FPS
-        if frame_i > 240:
+        if frame_i > 10000:
             break
         # potential_key = cv2.waitKey(1)
         # if potential_key & 0xFF == ord('q'):

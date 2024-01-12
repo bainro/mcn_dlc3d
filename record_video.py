@@ -71,9 +71,7 @@ try:
         # @TODO can speed up a lot by making the screen grabs asynchronous instead 
         #       of waiting for each frame to finish before starting another
         for i, (v, c) in enumerate(zip(vids, cams)): 
-            print(123)
             ret, frame = c.read()
-            print(234)
             v.write(frame)
         frame_i += 1
         if not frame_i % FPS:
@@ -84,7 +82,7 @@ try:
                 print(f'last {FPS} frames took {elapsed:.1f} seconds')
             last_time = now
         # @TODO make interactive without slowing down FPS
-        if len(vids[0]) > 240:
+        if frame_i > 240:
             break
         # potential_key = cv2.waitKey(1)
         # if potential_key & 0xFF == ord('q'):

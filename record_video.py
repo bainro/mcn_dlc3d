@@ -8,6 +8,8 @@ cv2.destroyAllWindows()
 os.makedirs("recorded_videos", exist_ok=True)
 os.chdir("recorded_videos")
 
+FPS = 60 # naive assumption; corrected below
+
 try:
     # get all cameras 
     cams = []
@@ -17,6 +19,9 @@ try:
             temp_camera = cv2.VideoCapture(i, cv2.CAP_DSHOW)
         else:
             temp_camera = cv2.VideoCapture(i)
+        # @TODO ensure the final FPS is actually close to this!
+        temp_camera.set(cv2.CAP_PROP_FPS, 60) 
+        # temp_camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         i += 1
         # print("\n", temp_camera.isOpened(), "\n")
         is_cam = temp_camera.isOpened()
@@ -52,7 +57,6 @@ try:
         print("Otherwise the corner points might not be detected consistently across images.")
     
     vids = []
-    FPS = 15 # naive assumption; corrected below
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     for c_i, c in enumerate(cams):
         w = int(c.get(cv2.CAP_PROP_FRAME_WIDTH))

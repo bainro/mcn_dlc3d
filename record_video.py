@@ -46,6 +46,7 @@ try:
     cams = _cams
     
     is_calib = input("\nIs this going to be a checkerboard calibration video? [Y/n]")
+    is_calib = ('y' in is_calib) or ('Y' in is_calib)
     if is_calib:
         print("Don't rotate the board more than ~50 degrees in the video plane (ie left or right).")
         print("Otherwise the corner points might not be detected consistently across images.")

@@ -8,6 +8,7 @@ _3d_kypts = pd.read_pickle(r'/home/rbain/git/mcn_dlc3d/kpms_3D_data.p')
 single_m_vid = _3d_kypts['21_11_8_one_mouse']
 # should be 14 3d pts
 # test_frame = single_m_vid[-1,...]
+# confidences = np.zeros((n_frames,n_pts))  
 
 colormap = plt.get_cmap("jet")
 num_pts = single_m_vid.shape[1]
@@ -15,6 +16,7 @@ col = colormap(np.linspace(0, 1, num_pts))
 
 fps = 30
 w, h = 480, 480
+# to save space: ffmpeg -i visualize_datta_3d_kypts.avi video.mp4
 vid = cv2.VideoWriter("/tmp/visualize_datta_3d_kypts.avi", 0, fps, (w,h))
 num_frames = single_m_vid.shape[0]
 # useful for debugging

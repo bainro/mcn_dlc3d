@@ -1,0 +1,181 @@
+import os
+import cv2 
+import time
+import queue
+import threading
+
+# allows us to update video's FPS in parallel
+def fps_worker(vid_name, true_fps):    
+    hlp = "make only the one file. Eg write tmp, overwrite while copying tmp to bad_fps.avi"
+    assert False, hlp
+    for c_i in range(len(cams)):
+        wrong_fps_vid = f'camera_{c_i+1}.avi'
+        # open video with wrong FPS
+        vid = cv2.VideoCapture(wrong_fps_vid)
+        w = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        ### @TODO make condition on os.name to use Window's /Temp/
+        fixed_vid = cv2.VideoWriter(r'/tmp/', fourcc, true_fps, (w, h)) 
+        while(True):
+            ret, frame = vid.read()
+            if ret:
+                fixed_vid.write(frame)
+            else:
+                vid.release()
+                fixed_vid.release()
+                os.remove(wrong_fps_vid)
+                break
+
+# allows us to grab images from webcams in parallel
+def cam_worker(cam_id, vid_name, fps, q):    
+    # open the webcam file / stream
+    if os.name == 'nt':
+        cam = cv2.VideoCapture(cam_id, cv2.CAP_DSHOW)
+    else:
+        cam = cv2.VideoCapture(cam_id)
+    cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+    # @TODO ensure the final FPS is actually close to this!
+    cam.set(cv2.CAP_PROP_FPS, FPS)
+    assert cam.isOpened(), "camera failed to open"
+    
+    # @TODO add back in FPS-correcting timer code
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    w = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
+    h = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    wrong_fps_vid = f'camera_{c_i+1}.avi'
+    vid = cv2.VideoWriter(wrong_fps_vid, fourcc, FPS, (w, h)) 
+
+    # first few frames are way earlier wrt correct, later frames
+    for _ in range(10):
+        ret, frame = cam.read()
+    current_frame = frame
+    
+    while True:
+        msg = None
+        try:
+            msg = q.get_nowait()
+        except:
+            pass
+        if msg == "stop":
+            cam.release()
+            vid.release()
+            break
+        elif msg == "capture":
+            vid.write(current_frame)
+            q.task_done()
+            
+        # grab the latest image
+        ret, frame = cam.read()
+        assert ret, "camera thread worker crashed :("
+
+if __name__ == "__main__":
+    # extra safe cleanup 
+    cv2.destroyAllWindows() 
+
+    save_dir = "recorded_videos"
+    os.makedirs(save_dir, exist_ok=True)
+
+    FPS = 60 # naive assumption; corrected later
+
+    # get all cameras 
+    cam_sys_ids = []
+    cams = []
+    i = 0
+    while(i < 10): 
+        if os.name == 'nt':
+            temp_camera = cv2.VideoCapture(i, cv2.CAP_DSHOW)
+        else:
+            temp_camera = cv2.VideoCapture(i)
+        is_cam = temp_camera.isOpened()
+        if is_cam:
+            cams.append(temp_camera)
+            cam_sys_ids.append(i)
+        i += 1
+
+    print(f'Number of cameras detected: {len(cams)}')
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    # show all cameras 
+    while(True): 
+        for c in range(len(cams)):
+            vid = cams[c]
+            ret, frame = vid.read()
+            cv2.putText(frame, f"{c+1}", (100, 100), font, 3, (255, 255, 255), 8)
+            cv2.imshow(f"camera #{c+1}. (press q to quit)", frame) 
+        if cv2.waitKey(1) & 0xFF == ord('q'): 
+            break
+
+    cv2.destroyAllWindows() 
+    
+    for c in cams:
+        c.release()
+    del cams
+
+    cam_ids = []
+    num_cams = int(input("How many cameras do you want to setup? "))
+    for cam in range(num_cams):   
+        cam_id = int(input(f"which camera is #{cam+1}? "))
+        sys_id = cam_sys_ids[cam_id-1]
+        cam_ids.append(sys_id)
+
+    record_time = int(time.time())
+    # list of camera workers and their queues
+    qs = []
+    cam_ws = []
+    vid_files = []
+    for c_i in cam_ids:
+        q = queue.Queue()
+        qs.append(q)    
+        # create a camera worker
+        vname = f'camera_{c_i+1}_{record_time}.avi'
+        vid_files.append(vname)
+        w_args = (c_i, vname, FPS, q)
+        cam_th = threading.Thread(target=cam_worker, args=w_args, daemon=False)
+        # start the parallel worker thread
+        cam_th.start()
+        cam_ws.append(cam_th)
+
+    frame_i = 0
+    last_time = None
+    start_time = time.time()
+
+    ### @TODO show small blank photo with instructions to quit in title
+    
+
+    while(True): 
+        # tell all the cameras to record the latest image
+        for q in qs:
+            q.put("capture")
+        # wait for all the workers to record the image
+        for q in qs:
+            q.join()
+        frame_i += 1
+        if not frame_i % FPS:
+            print(f'{frame_i} frames recorded!')
+            now = time.time()
+            if last_time != None:
+                elapsed = now - last_time
+                print(f'last {FPS} frames took {elapsed:.1f} seconds\n')
+            last_time = now
+        
+        potential_key = cv2.waitKey(1)
+        if potential_key & 0xFF == ord('q'):
+            for q in qs:
+                q.put("stop")
+            # wait for all the cameras and videos to be released
+            for w in cam_ws:
+                w.join()                
+            break
+        
+    elapsed_t = time.time() - start_time
+    print(f"True seconds recorded: {elapsed_t:.1f}")
+    true_fps = round(frame_i / elapsed_t)
+    print(f"True FPS: {true_fps:.1f}")
+
+    print("Fixing recorded video's FPS...")
+    start_time = time.time()
+    ### @TODO start all the fps_workers and do a threads.join()
+    print(f"Time to fix video FPS: {time.time() - start_time:.1f} seconds")
+
+    cv2.destroyAllWindows()

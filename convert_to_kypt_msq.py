@@ -1,31 +1,29 @@
-"""
-@author: rbain
-"""
 import os
 import numpy as np
 import keypoint_moseq as kpms
- 
-all_body_parts = [
-    'nose', 'left_ear', 'right_ear', 'left_ear_tip',  # 3
-    'right_ear_tip', 'left_eye', 'right_eye', 'neck', # 7
-    'mid_back', 'mouse_center', 'mid_backend',        # 10
-    'mid_backend2', 'mid_backend3', 'tail_base',      # 13
-    'tail1', 'tail2', 'tail3', 'tail4', 'tail5',      # 18
-    'left_shoulder', 'left_midside', 'left_hip',      # 21
-    'right_shoulder', 'right_midside', 'right_hip',   # 24
-    'tail_end', 'head_midpoint'                       # 26
-]
 
-# Tail removal was recommended by keypoint-moseq tutorial
-low_conf_parts = [
-    'tail1', 'tail2', 'tail3', 'tail4', 'tail5',
-    'tail_end', 'left_ear_tip', 'left_hip', 
-    'right_ear_tip', 'right_shoulder', 'left_shoulder',
-    'left_midside'
-] 
+'''
+##################
+# skeleton parts #
+##################
+[0]  cervical spine
+[1]  thoracic spine
+[2]  lumbar spine
+[3]  tail base
+[4]  head
+[5]  left ear
+[6]  right ear
+[7]  nose
+[8]  left hindpaw base
+[9]  left hindpaw tip
+[10] right hindpaw base
+[11] right hindpaw tip
+[12] left forepaw tip
+[13] right forepaw tip
+'''
 
-used_skeleton = []
-full_skeleton=[
+### @TODO update skeleton! Still DLC superanimal...
+skeleton=[
     ['nose', 'head_midpoint'], 
     ['left_eye', 'head_midpoint'],
     ['right_eye', 'head_midpoint'],
@@ -53,20 +51,20 @@ full_skeleton=[
     ['tail4', 'tail5'],
     ['tail5', 'tail_end'],
 ]
-for c in full_skeleton:
-    has_low_conf_pt = (c[0] in low_conf_parts) or (c[1] in low_conf_parts)
-    if not has_low_conf_pt:
-        used_skeleton.append(c)
 
-# remove low conf body part pts
-used_body_parts = []
-for bp in all_body_parts:
-    if bp not in low_conf_parts:
-        used_body_parts.append(bp)
+body_parts = []
+# make set of those in skeleton
+for bp1, bp2 in skeleton:
+    body_parts.append(bp1)
+    body_parts.append(bp2)
+body_parts = set(body_parts)
         
-n_pts = len(used_body_parts)
-n_removed = len(all_body_parts) - len(used_body_parts)
-print(f'{n_removed} pts removed. {n_pts} still included')
+n_pts = len(body_parts)
+
+_3d_kypts = pd.read_pickle(r'/home/rbain/git/mcn_dlc3d/kpms_3D_data.p')
+### @TODO yoink syntax to read all vids
+# single_m_vid = _3d_kypts['21_11_8_one_mouse']
+confidences = np.zeros((n_frames,n_pts)) 
         
 data_dir = "./"
 project_dir = './tmp/kmoseq'

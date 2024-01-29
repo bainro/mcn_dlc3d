@@ -40,9 +40,7 @@ n_pts = len(body_parts)
 _3d_kypts = pd.read_pickle(r'/home/rbain/git/mcn_dlc3d/kpms_3D_data.p')
 ### @TODO yoink syntax to read all vids in for loop
 # single_m_vid = _3d_kypts['21_11_8_one_mouse']
-asser False, "load the npy now instead"
-
-confidences = np.ones((n_frames, n_pts)) 
+asser False, "load the npy now instead" 
 
 project_dir = './tmp/kmoseq'
 config = lambda: kpms.load_config(project_dir)
@@ -67,7 +65,7 @@ coordinates = np.load("coordinates.npy")
 coordinates = {'only_recording': coordinates}
 
 # format data for modeling
-data, metadata = kpms.format_data(coordinates, confidences, **config())
+data, metadata = kpms.format_data(coordinates, confidences=None, **config())
 
 pca = kpms.fit_pca(**data, **config())
 kpms.save_pca(pca, project_dir)

@@ -51,33 +51,9 @@ x[10:12], y[10:12], z[10:12]
 [x[13], x[0]], [y[13], y[0]], [z[13], z[0]]
 
 ### @TODO update skeleton! Still DLC superanimal...
-skeleton=[
-    ['nose', 'head_midpoint'], 
-    ['left_eye', 'head_midpoint'],
-    ['right_eye', 'head_midpoint'],
-    ['left_ear_tip', 'left_ear'],
-    ['left_ear', 'head_midpoint'],
-    ['right_ear_tip', 'right_ear'],
-    ['right_ear', 'head_midpoint'],
-    ['head_midpoint', 'neck'],
-    ['left_shoulder', 'neck'],
-    ['right_shoulder', 'neck'],
-    ['neck', 'mid_back'],
-    ['mid_back', 'mouse_center'],
-    ['left_midside', 'mouse_center'],
-    ['right_midside', 'mouse_center'],
-    ['mouse_center', 'mid_backend'],
-    ['mid_backend', 'mid_backend2'],
-    ['mid_backend2', 'mid_backend3'],
-    ['left_hip', 'mid_backend3'],
-    ['right_hip', 'mid_backend3'],
-    ['mid_backend3', 'tail_base'],
-    ['tail_base', 'tail1'],
-    ['tail1', 'tail2'],
-    ['tail2', 'tail3'],
-    ['tail3', 'tail4'],
-    ['tail4', 'tail5'],
-    ['tail5', 'tail_end'],
+skeleton = [
+    ['c-spine', 't-spine'], 
+    ['c-spine', 't-spine'], 
 ]
 
 body_parts = []
@@ -90,9 +66,11 @@ body_parts = list(set(body_parts))
 n_pts = len(body_parts)
 
 _3d_kypts = pd.read_pickle(r'/home/rbain/git/mcn_dlc3d/kpms_3D_data.p')
-### @TODO yoink syntax to read all vids
+
+### @TODO yoink syntax to read all vids in for loop
 # single_m_vid = _3d_kypts['21_11_8_one_mouse']
-confidences = np.zeros((n_frames,n_pts)) 
+
+confidences = np.zeros((n_frames, n_pts)) 
 
 for i in range(n_frames):
     frame = single_m_vid[i]

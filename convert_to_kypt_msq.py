@@ -44,10 +44,6 @@ _3d_kypts = pd.read_pickle(r'/home/rbain/git/mcn_dlc3d/kpms_3D_data.p')
 
 confidences = np.ones((n_frames, n_pts)) 
 
-for i in range(n_frames):
-    frame = single_m_vid[i]
-    x, y, z = frame[:,0], frame[:,1], frame[:,2]
-
 data_dir = "./"
 project_dir = './tmp/kmoseq'
 config = lambda: kpms.load_config(project_dir)
@@ -64,14 +60,13 @@ kpms.setup_project(
 kpms.update_config(
     project_dir,
     anterior_bodyparts=['nose'],
-    posterior_bodyparts=['tail_base'],
-    use_bodyparts=used_body_parts
+    posterior_bodyparts=['tail base'],
+    use_bodyparts=body_parts
 )
 
+### @TODO convert their pickle to an npy?
 coordinates = np.load("coordinates.npy")
 coordinates = {'only_recording': coordinates}
-confidences = np.load("confidences.npy")
-confidences = {'only_recording': confidences}
 
 # format data for modeling
 data, metadata = kpms.format_data(coordinates, confidences, **config())

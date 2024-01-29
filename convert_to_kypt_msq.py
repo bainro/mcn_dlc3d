@@ -42,7 +42,7 @@ _3d_kypts = pd.read_pickle(r'/home/rbain/git/mcn_dlc3d/kpms_3D_data.p')
 ### @TODO yoink syntax to read all vids in for loop
 # single_m_vid = _3d_kypts['21_11_8_one_mouse']
 
-confidences = np.zeros((n_frames, n_pts)) 
+confidences = np.ones((n_frames, n_pts)) 
 
 for i in range(n_frames):
     frame = single_m_vid[i]

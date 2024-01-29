@@ -38,22 +38,20 @@ skeleton = [
 n_pts = len(body_parts)
 
 _3d_kypts = pd.read_pickle(r'/home/rbain/git/mcn_dlc3d/kpms_3D_data.p')
-
 ### @TODO yoink syntax to read all vids in for loop
 # single_m_vid = _3d_kypts['21_11_8_one_mouse']
+asser False, "load the npy now instead"
 
 confidences = np.ones((n_frames, n_pts)) 
 
-data_dir = "./"
 project_dir = './tmp/kmoseq'
 config = lambda: kpms.load_config(project_dir)
-video_dir = os.path.join(data_dir, 'recorded_videos')
-
+video_dir = os.path.join('/home/rbain/git/mcn_dlc3d/moseq_vids')
 kpms.setup_project(
     project_dir,
     video_dir=video_dir,
-    bodyparts=all_body_parts,
-    skeleton=used_skeleton,
+    bodyparts=body_parts,
+    skeleton=skeleton,
     overwrite=True
 )
 
@@ -78,16 +76,15 @@ kpms.print_dims_to_explain_variance(pca, 0.9)
 kpms.plot_scree(pca, project_dir=project_dir)
 kpms.plot_pcs(pca, project_dir=project_dir, **config())
 
-kpms.update_config(project_dir, latent_dim=10)
+kpms.update_config(project_dir, latent_dim=4)
 
 # initialize the model
 model = kpms.init_model(data, pca=pca, **config())
 
 # optionally modify kappa
-model = kpms.update_hypparams(model, kappa=1e5)
+# model = kpms.update_hypparams(model, kappa=1e5)
 
-    num_ar_iters = 50
-
+num_ar_iters = 50
 model, model_name = kpms.fit_model(
     model, data, metadata, project_dir,
     ar_only=True, num_iters=num_ar_iters

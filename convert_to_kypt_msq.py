@@ -4,7 +4,7 @@
 import os
 import numpy as np
 import keypoint_moseq as kpms
-
+ 
 all_body_parts = [
     'nose', 'left_ear', 'right_ear', 'left_ear_tip',  # 3
     'right_ear_tip', 'left_eye', 'right_eye', 'neck', # 7

@@ -22,46 +22,38 @@ import keypoint_moseq as kpms
 [13] right forepaw tip
 '''
 
-x, y, z = frame[:,0], frame[:,1], frame[:,2]
-# c-spine & back one
-x[:2], y[:2], z[:2]
-# back one further
-x[1:3], y[1:3], z[1:3]
-# back one further
-x[2:4], y[2:4], z[2:4]
-# c-spine to head
-[x[0], x[4]], [y[0], y[4]], [z[0], z[4]]
-# head to left ear
-x[4:6], y[4:6], z[4:6]
-# head to right ear
-[x[4], x[6]], [y[4], y[6]], [z[4], z[6]]
-# head to nose
-[x[4], x[7]], [y[4], y[7]], [z[4], z[7]]
-# left hind limb to left foot
-x[8:10], y[8:10], z[8:10]
-# left hind limb to spine/trunk
-[x[8], x[1]], [y[8], y[1]], [z[8], z[1]]
-# right hind limg to right foot
-x[10:12], y[10:12], z[10:12]
-# right hind limb to spine/trunk
-[x[10], x[1]], [y[10], y[1]], [z[10], z[1]]
-# front left paw to spine/trunk
-[x[12], x[0]], [y[12], y[0]], [z[12], z[0]]
-# front right paw to spine/trunk
-[x[13], x[0]], [y[13], y[0]], [z[13], z[0]]
-
-### @TODO update skeleton! Still DLC superanimal...
 skeleton = [
-    ['c-spine', 't-spine'], 
-    ['c-spine', 't-spine'], 
+    ['cervical spine', 'thoracic spine'], 
+    ['thoracic spine', 'lumbar spine'], 
+    ['lumbar spine', 'tail base'], 
+    ['cervical spine', 'head'], 
+    ['head', 'left ear'], 
+    ['head', 'right ear'],
+    ['head', 'nose'],
+    # left hind limb to left foot
+    # left hind limb to spine/trunk
+    # right hind limg to right foot
+    # right hind limb to spine/trunk
+    # front left paw to spine/trunk
+    # front right paw to spine/trunk
 ]
 
-body_parts = []
-# make set of those in skeleton
-for bp1, bp2 in skeleton:
-    body_parts.append(bp1)
-    body_parts.append(bp2)
-body_parts = list(set(body_parts))
+body_parts = [
+    "cervical spine",
+    "thoracic spine",
+    "lumbar spine",
+    "tail base",
+    "head",
+    "left ear",
+    "right ear",
+    "nose",
+    "left hindpaw base",
+    "left hindpaw tip",
+    "right hindpaw base",
+    "right hindpaw tip",
+    "left forepaw tip",
+    "right forepaw tip"
+]
         
 n_pts = len(body_parts)
 

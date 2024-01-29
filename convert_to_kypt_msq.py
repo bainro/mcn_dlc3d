@@ -34,13 +34,6 @@ skeleton = [
     ['left forepaw tip', 'cervical spine'],
     ['right forepaw tip', 'cervical spine'],
 ]
-        
-n_pts = len(body_parts)
-
-_3d_kypts = pd.read_pickle(r'/home/rbain/git/mcn_dlc3d/kpms_3D_data.p')
-### @TODO yoink syntax to read all vids in for loop
-# single_m_vid = _3d_kypts['21_11_8_one_mouse']
-asser False, "load the npy now instead" 
 
 project_dir = './tmp/kmoseq'
 config = lambda: kpms.load_config(project_dir)
@@ -60,10 +53,7 @@ kpms.update_config(
     use_bodyparts=body_parts
 )
 
-### @TODO convert their pickle to an npy?
-coordinates = np.load("coordinates.npy")
-coordinates = {'only_recording': coordinates}
-
+coordinates = pd.read_pickle(r'/home/rbain/git/mcn_dlc3d/kpms_3D_data.p')
 # format data for modeling
 data, metadata = kpms.format_data(coordinates, confidences=None, **config())
 

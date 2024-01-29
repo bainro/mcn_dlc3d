@@ -2,42 +2,6 @@ import os
 import numpy as np
 import keypoint_moseq as kpms
 
-'''
-##################
-# skeleton parts #
-##################
-[0]  cervical spine
-[1]  thoracic spine
-[2]  lumbar spine
-[3]  tail base
-[4]  head
-[5]  left ear
-[6]  right ear
-[7]  nose
-[8]  left hindpaw base
-[9]  left hindpaw tip
-[10] right hindpaw base
-[11] right hindpaw tip
-[12] left forepaw tip
-[13] right forepaw tip
-'''
-
-skeleton = [
-    ['cervical spine', 'thoracic spine'], 
-    ['thoracic spine', 'lumbar spine'], 
-    ['lumbar spine', 'tail base'], 
-    ['cervical spine', 'head'], 
-    ['head', 'left ear'], 
-    ['head', 'right ear'],
-    ['head', 'nose'],
-    # left hind limb to left foot
-    # left hind limb to spine/trunk
-    # right hind limg to right foot
-    # right hind limb to spine/trunk
-    # front left paw to spine/trunk
-    # front right paw to spine/trunk
-]
-
 body_parts = [
     "cervical spine",
     "thoracic spine",
@@ -53,6 +17,22 @@ body_parts = [
     "right hindpaw tip",
     "left forepaw tip",
     "right forepaw tip"
+]
+
+skeleton = [
+    ['cervical spine', 'thoracic spine'], 
+    ['thoracic spine', 'lumbar spine'], 
+    ['lumbar spine', 'tail base'], 
+    ['cervical spine', 'head'], 
+    ['head', 'left ear'], 
+    ['head', 'right ear'],
+    ['head', 'nose'],
+    ['left hindpaw base', 'left hindpaw tip'],
+    ['left hindpaw base', 'thoracic spine'],
+    ['right hindpaw base', 'right hindpaw tip'],
+    ['right hindpaw base', 'thoracic spine'],
+    ['left forepaw tip', 'cervical spine'],
+    ['right forepaw tip', 'cervical spine'],
 ]
         
 n_pts = len(body_parts)

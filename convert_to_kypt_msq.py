@@ -67,7 +67,7 @@ print('\n\n\n')
 kpms.plot_scree(pca, project_dir=project_dir)
 kpms.plot_pcs(pca, project_dir=project_dir, **config())
 
-kpms.update_config(project_dir, latent_dim=4)
+kpms.update_config(project_dir, latent_dim=7)
 
 # initialize the model
 model = kpms.init_model(data, pca=pca, **config())

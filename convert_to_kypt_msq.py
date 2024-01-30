@@ -60,7 +60,10 @@ data, metadata = kpms.format_data(coordinates, confidences=None, **config())
 pca = kpms.fit_pca(**data, **config())
 kpms.save_pca(pca, project_dir)
 
+print('\n\n\n')
 kpms.print_dims_to_explain_variance(pca, 0.9)
+print('\n\n\n')
+
 kpms.plot_scree(pca, project_dir=project_dir)
 kpms.plot_pcs(pca, project_dir=project_dir, **config())
 

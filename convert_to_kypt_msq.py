@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 import keypoint_moseq as kpms
 
 body_parts = [

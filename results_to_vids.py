@@ -90,7 +90,7 @@ for i, src_v in enumerate(src_vids):
           # if consecutive frames, then wait to do buffering (or similar logic)
         overlaid_txt = f'{src_name}: {mins:.1f}min {secs:.1f}secs'
         cv2.putText(frame, overlaid_txt, (10, 30), font, 1, (255, 255, 255), 2)
-        syl_vids[s].write(frame)
+        syl_vids[s - 1].write(frame)
     err_txt = 'each video frame needs a corresponding csv row'
     assert src_v.read()[0] == False, err_txt
     # cleanup now so we can check some results earlier
@@ -113,6 +113,3 @@ for f in output_vids:
     smaller_vid = f_split[:-1] + "final." + f_split[-1]
     os.system(f"ffmpeg -i {f} {smaller_vid}")
     os.remove(f)
-
-    
-# %% <-- separates sections in spyder IDE

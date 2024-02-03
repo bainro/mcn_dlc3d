@@ -1,4 +1,5 @@
 import os
+import jax_moseq
 import numpy as np
 import pandas as pd
 import keypoint_moseq as kpms
@@ -70,6 +71,8 @@ kpms.plot_pcs(pca, project_dir=project_dir, **config())
 
 kpms.update_config(project_dir, latent_dim=7)
 
+# convert to 64-bit precision in JAX
+data = jax_moseq.utils.debugging.convert_data_precision(data, True)
 # initialize the model
 model = kpms.init_model(data, pca=pca, **config())
 

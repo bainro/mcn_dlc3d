@@ -1,3 +1,6 @@
+# follow my journey here for Linux GPU keypoint_moseq:
+# https://github.com/dattalab/keypoint-moseq/issues/129
+
 conda create --name=dlc_gpu python=3.9
 conda activate dlc_gpu
 conda install -c conda-forge cudatoolkit=11.2.2 cudnn=8.1.0

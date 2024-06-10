@@ -27,7 +27,6 @@ def fps_worker(wrong_fps_vid, true_fps):
         if ret:
             fixed_vid.write(frame)
         else:
-            assert num_images > 0, f'error opening {wrong_fps_vid}'
             vid.release()
             fixed_vid.release()
             temp_file.close()

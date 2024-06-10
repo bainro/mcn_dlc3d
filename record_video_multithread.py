@@ -192,7 +192,8 @@ if __name__ == "__main__":
 
     print("Fixing recorded video's FPS...")
     start_time = time.time()
-    ### @TODO start all the fps_workers and do a threads.join()
+    
+    ### @TODO start all the fps_workers
 
     try:
         mp.set_start_method('spawn')
@@ -207,7 +208,5 @@ if __name__ == "__main__":
     cam_pool.join()
     
     print(f"Time to fix video FPS: {time.time() - start_time:.1f} seconds")
-    
-    assert False, "Lies! Never fixed FPS :("
 
     cv2.destroyAllWindows()

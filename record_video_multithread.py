@@ -168,7 +168,7 @@ if __name__ == "__main__":
             frame_i += 1
             if not frame_i % FPS:
                 now = datetime.datetime.now().strftime("%H:%M:%S")
-                log_file.write(f'{now}\n')
+                log.write(f'{now}\n')
                 print(f'{frame_i} frames recorded!')
                 now = time.time()
                 if last_time != None:

@@ -200,12 +200,11 @@ if __name__ == "__main__":
     except:
         pass
     
-    n_proc = 4
-    cam_pool = mp.Pool(n_proc)
-    args = [ch1, ch2, results_dir, r_threshold, g_threshold]
-    cam_pool.apply_async(func=img_worker, args=args, error_callback=ecb)
-    cam_pool.close()
-    cam_pool.join()
+    fps_pool = mp.Pool(num_cams)
+    args = [vid_name, true_fps]
+    fps_pool.apply_async(func=fps_worker, args=args, error_callback=ecb)
+    fps_pool.close()
+    fps_pool.join()
     
     print(f"Time to fix video FPS: {time.time() - start_time:.1f} seconds")
 

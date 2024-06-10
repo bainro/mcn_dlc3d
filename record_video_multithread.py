@@ -7,6 +7,10 @@ import threading
 import numpy as np
 import multiprocessing as mp
 
+# simple error callback for debugging processes
+def ecb(e):
+    assert False, print(e)
+
 # allows us to update video's FPS in parallel
 def fps_worker(vid_name, true_fps):    
     hlp = "make only the one file. Eg write tmp, overwrite while copying tmp to bad_fps.avi"
@@ -196,12 +200,11 @@ if __name__ == "__main__":
         pass
     
     n_proc = 4
-    img_pool = mp.Pool(n_proc)
+    cam_pool = mp.Pool(n_proc)
     args = [ch1, ch2, results_dir, r_threshold, g_threshold]
-    img_pool.apply_async(func=img_worker, args=args, error_callback=ecb)
-    img_pool.close()
-    img_pool.join()
-
+    cam_pool.apply_async(func=img_worker, args=args, error_callback=ecb)
+    cam_pool.close()
+    cam_pool.join()
     
     print(f"Time to fix video FPS: {time.time() - start_time:.1f} seconds")
     

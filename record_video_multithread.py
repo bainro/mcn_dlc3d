@@ -21,7 +21,9 @@ def fps_worker(wrong_fps_vid, true_fps):
     h = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     temp_file = tempfile.NamedTemporaryFile(suffix=".avi") 
-    fixed_vid = cv2.VideoWriter(temp_file.name, fourcc, true_fps, (w, h)) 
+    temp_file = os.path.join(temp_file.name)
+    temp_file.close()
+    fixed_vid = cv2.VideoWriter(temp_file, fourcc, true_fps, (w, h)) 
     while(True):
         ret, frame = vid.read()
         if ret:
@@ -30,7 +32,7 @@ def fps_worker(wrong_fps_vid, true_fps):
             vid.release()
             fixed_vid.release()
             os.remove(wrong_fps_vid)
-            shutil.move(temp_file.name, wrong_fps_vid)
+            shutil.move(temp_file, wrong_fps_vid)
             break
 
 # allows us to grab images from webcams in parallel

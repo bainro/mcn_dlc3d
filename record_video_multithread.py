@@ -192,8 +192,6 @@ if __name__ == "__main__":
 
     print("Fixing recorded video's FPS...")
     start_time = time.time()
-    
-    ### @TODO start all the fps_workers
 
     try:
         mp.set_start_method('spawn')

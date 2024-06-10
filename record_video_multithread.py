@@ -5,6 +5,7 @@ import queue
 import datetime
 import threading
 import numpy as np
+import multiprocessing as mp
 
 # allows us to update video's FPS in parallel
 def fps_worker(vid_name, true_fps):    
@@ -188,6 +189,20 @@ if __name__ == "__main__":
     print("Fixing recorded video's FPS...")
     start_time = time.time()
     ### @TODO start all the fps_workers and do a threads.join()
+
+    try:
+        mp.set_start_method('spawn')
+    except:
+        pass
+    
+    n_proc = 4
+    img_pool = mp.Pool(n_proc)
+    args = [ch1, ch2, results_dir, r_threshold, g_threshold]
+    img_pool.apply_async(func=img_worker, args=args, error_callback=ecb)
+    img_pool.close()
+    img_pool.join()
+
+    
     print(f"Time to fix video FPS: {time.time() - start_time:.1f} seconds")
     
     assert False, "Lies! Never fixed FPS :("

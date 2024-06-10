@@ -199,13 +199,12 @@ if __name__ == "__main__":
         mp.set_start_method('spawn')
     except:
         pass
-    
     fps_pool = mp.Pool(num_cams)
-    args = [vid_name, true_fps]
-    fps_pool.apply_async(func=fps_worker, args=args, error_callback=ecb)
+    for vid_name in vid_files:
+        args = [vid_name, true_fps]
+        fps_pool.apply_async(func=fps_worker, args=args, error_callback=ecb)
     fps_pool.close()
     fps_pool.join()
-    
     print(f"Time to fix video FPS: {time.time() - start_time:.1f} seconds")
 
     cv2.destroyAllWindows()

@@ -22,7 +22,6 @@ def fps_worker(wrong_fps_vid, true_fps):
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     temp_file = tempfile.NamedTemporaryFile(suffix=".avi") 
     temp_file = os.path.join(temp_file.name)
-    temp_file.close()
     fixed_vid = cv2.VideoWriter(temp_file, fourcc, true_fps, (w, h)) 
     while(True):
         ret, frame = vid.read()

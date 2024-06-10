@@ -14,26 +14,24 @@ def ecb(e):
     assert False, print(e)
 
 # allows us to update video's FPS in parallel
-def fps_worker(vid_name, true_fps):    
-    for c_i in range(len(cams)):
-        wrong_fps_vid = f'camera_{c_i+1}.avi'
-        # open video with wrong FPS
-        vid = cv2.VideoCapture(wrong_fps_vid)
-        w = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
-        h = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        temp_file = tempfile.NamedTemporaryFile(suffix=".avi") 
-        fixed_vid = cv2.VideoWriter(temp_file.name, fourcc, true_fps, (w, h)) 
-        while(True):
-            ret, frame = vid.read()
-            if ret:
-                fixed_vid.write(frame)
-            else:
-                vid.release()
-                fixed_vid.release()
-                os.remove(wrong_fps_vid)
-                shutil.move(fixed_vid, wrong_fps_vid)
-                break
+def fps_worker(wrong_fps_vid, true_fps):    
+    # open video with wrong FPS
+    vid = cv2.VideoCapture(wrong_fps_vid)
+    w = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
+    h = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    temp_file = tempfile.NamedTemporaryFile(suffix=".avi") 
+    fixed_vid = cv2.VideoWriter(temp_file.name, fourcc, true_fps, (w, h)) 
+    while(True):
+        ret, frame = vid.read()
+        if ret:
+            fixed_vid.write(frame)
+        else:
+            vid.release()
+            fixed_vid.release()
+            os.remove(wrong_fps_vid)
+            shutil.move(fixed_vid, wrong_fps_vid)
+            break
 
 # allows us to grab images from webcams in parallel
 def cam_worker(cam_id, vid_name, fps, q):    

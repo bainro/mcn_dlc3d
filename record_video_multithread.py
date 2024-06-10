@@ -3,6 +3,7 @@ import cv2
 import time
 import queue
 import datetime
+import tempfile
 import threading
 import numpy as np
 import multiprocessing as mp
@@ -22,15 +23,8 @@ def fps_worker(vid_name, true_fps):
         w = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        ### @TODO use tempfile to be compatible with multiple OSs
-        '''
-        import tempfile 
-  
-        temp = tempfile.NamedTemporaryFile(suffix="_s", prefix="p_") 
-        print('temp.name:', temp.name) 
-        temp.close() 
-        '''
-        fixed_vid = cv2.VideoWriter(r'/tmp/', fourcc, true_fps, (w, h)) 
+        temp_file = tempfile.NamedTemporaryFile(suffix=".avi") 
+        fixed_vid = cv2.VideoWriter(temp_file.name, fourcc, true_fps, (w, h)) 
         while(True):
             ret, frame = vid.read()
             if ret:

@@ -27,6 +27,9 @@ def fps_worker(wrong_fps_vid, true_fps):
         ret, frame = vid.read()
         if ret:
             num_images += 1
+            print();print();print();print();print();
+            print(num_images)
+            print();print();print();print();print();
             fixed_vid.write(frame)
         else:
             assert num_images > 0, f'error opening {wrong_fps_vid}'

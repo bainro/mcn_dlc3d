@@ -15,8 +15,6 @@ def ecb(e):
 
 # allows us to update video's FPS in parallel
 def fps_worker(vid_name, true_fps):    
-    hlp = "make only the one file. Eg write tmp, overwrite while copying tmp to bad_fps.avi"
-    assert False, hlp
     for c_i in range(len(cams)):
         wrong_fps_vid = f'camera_{c_i+1}.avi'
         # open video with wrong FPS

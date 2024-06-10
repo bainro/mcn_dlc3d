@@ -162,6 +162,7 @@ if __name__ == "__main__":
             q.put("capture")
         frame_i += 1
         if not frame_i % FPS:
+            ### @TODO append timestamp to csv file to ensure alignment
             print(f'{frame_i} frames recorded!')
             now = time.time()
             if last_time != None:

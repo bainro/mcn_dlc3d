@@ -142,6 +142,9 @@ if __name__ == "__main__":
         cam_th.start()
         cam_ws.append(cam_th)
 
+    # let camera workers setup (e.g. throw away 1st few frames)
+    time.sleep(2)
+    
     frame_i = 0
     last_time = None
     start_time = time.time()

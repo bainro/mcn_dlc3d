@@ -27,9 +27,9 @@ def fps_worker(wrong_fps_vid, true_fps):
         if ret:
             fixed_vid.write(frame)
         else:
-            temp_file.close()
             vid.release()
             fixed_vid.release()
+            temp_file.close()
             os.remove(wrong_fps_vid)
             shutil.move(temp_file.name, wrong_fps_vid)
             break

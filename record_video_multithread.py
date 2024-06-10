@@ -152,35 +152,39 @@ if __name__ == "__main__":
 
     cv2.imshow("PRESS 'q' TO STOP RECORDING", np.zeros((240,240,3)))
 
-    while(True): 
-        # only add more capture commands if they've finished the old ones
-        qs_empty = True
-        for q in qs:
-            qs_empty = qs_empty and q.empty()
-        if not qs_empty:
-            continue
-        # tell all the cameras to record the latest image
-        for q in qs:
-            q.put("capture")
-        frame_i += 1
-        if not frame_i % FPS:
-            ### @TODO append timestamp to csv file to ensure alignment
-            print(f'{frame_i} frames recorded!')
-            now = time.time()
-            if last_time != None:
-                elapsed = now - last_time
-                print(f'last {FPS} frames took {elapsed:.1f} seconds\n')
-            last_time = now
-    
-            potential_key = cv2.waitKey(1)
-            if potential_key & 0xFF == ord('q'):
-                cv2.destroyAllWindows()
-                for q in qs:
-                    q.put("stop")
-                # wait for all the cameras and videos to be released
-                for w in cam_ws:
-                    w.join()                
-                break
+    todays_date = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    log_file = os.path.join(os.getcwd(), f'{todays_date}_camera.log')
+    with open(log_file, 'w') as log:
+        while(True): 
+            # only add more capture commands if they've finished the old ones
+            qs_empty = True
+            for q in qs:
+                qs_empty = qs_empty and q.empty()
+            if not qs_empty:
+                continue
+            # tell all the cameras to record the latest image
+            for q in qs:
+                q.put("capture")
+            frame_i += 1
+            if not frame_i % FPS:
+                now = datetime.now().strftime("%H:%M:%S")
+                log_file.write(f'{now}\n')
+                print(f'{frame_i} frames recorded!')
+                now = time.time()
+                if last_time != None:
+                    elapsed = now - last_time
+                    print(f'last {FPS} frames took {elapsed:.1f} seconds\n')
+                last_time = now
+        
+                potential_key = cv2.waitKey(1)
+                if potential_key & 0xFF == ord('q'):
+                    cv2.destroyAllWindows()
+                    for q in qs:
+                        q.put("stop")
+                    # wait for all the cameras and videos to be released
+                    for w in cam_ws:
+                        w.join()                
+                    break
         
     elapsed_t = time.time() - start_time
     print(f"True seconds recorded: {elapsed_t:.1f}")

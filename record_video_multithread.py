@@ -150,7 +150,7 @@ if __name__ == "__main__":
     cv2.imshow("PRESS 'q' TO STOP RECORDING", np.zeros((240,240,3)))
 
     todays_date = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    log_file = os.path.join(os.getcwd(), f'{todays_date}_camera.log')
+    log_file = os.path.join(os.getcwd(), f'{todays_date}_every_{fps}_frames.log')
     with open(log_file, 'w') as log:
         while(True): 
             # only add more capture commands if they've finished the old ones

@@ -5,6 +5,7 @@ import queue
 import shutil
 import datetime
 import tempfile
+import threading
 import numpy as np
 import multiprocessing as mp
 
@@ -44,6 +45,8 @@ def cam_worker(cam_id, vid_name, fps, q):
         cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         # causes 30FPS bug on windows: https://tinyurl.com/5n8vncuy
         cam.set(cv2.CAP_PROP_FPS, fps)
+    cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+    cam.set(cv2.CAP_PROP_FPS, FPS)
     assert cam.isOpened(), "camera failed to open"
     
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -75,11 +78,6 @@ def cam_worker(cam_id, vid_name, fps, q):
 if __name__ == "__main__":
     # extra safe cleanup 
     cv2.destroyAllWindows() 
-
-    try:
-        mp.set_start_method('spawn')
-    except:
-        pass
 
     record_time = datetime.datetime.now()
     record_time = record_time.strftime('%Y-%m-%d_%H-%M-%S')
@@ -131,18 +129,20 @@ if __name__ == "__main__":
 
     # list of camera workers and their queues
     qs = []
+    cam_ws = []
     vid_files = []
-    m = mp.Manager()
-    cam_pool = mp.Pool(num_cams)
     for c_i in cam_ids:
-        q = m.Queue()
+        q = queue.Queue()
         qs.append(q)    
         # create a camera worker
         sys_id = cam_sys_ids[c_i]
         vname = os.path.join(save_dir, f'camera_{c_i}.avi')
         vid_files.append(vname)
         w_args = (sys_id, vname, FPS, q)
-        cam_pool.apply_async(func=cam_worker, args=w_args, error_callback=ecb)
+        cam_th = threading.Thread(target=cam_worker, args=w_args, daemon=False)
+        # start the parallel worker thread
+        cam_th.start()
+        cam_ws.append(cam_th)
 
     # let camera workers setup (e.g. throw away 1st few frames)
     time.sleep(2)
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     cv2.imshow("PRESS 'q' TO STOP RECORDING", np.zeros((240,240,3)))
 
     todays_date = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    log_file = os.path.join(os.getcwd(), f'{todays_date}_every_{FPS}_frames.log')
+    log_file = os.path.join(os.getcwd(), f'{todays_date}_camera.log')
     with open(log_file, 'w') as log:
         while(True): 
             # only add more capture commands if they've finished the old ones
@@ -183,9 +183,8 @@ if __name__ == "__main__":
                     for q in qs:
                         q.put("stop")
                     # wait for all the cameras and videos to be released
-                    cam_pool.close()
-                    cam_pool.join()
-                    del cam_pool              
+                    for w in cam_ws:
+                        w.join()                
                     break
         
     elapsed_t = time.time() - start_time
@@ -196,6 +195,10 @@ if __name__ == "__main__":
     print("Fixing recorded video's FPS...")
     start_time = time.time()
 
+    try:
+        mp.set_start_method('spawn')
+    except:
+        pass
     fps_pool = mp.Pool(num_cams)
     for vid_name in vid_files:
         args = [vid_name, true_fps]

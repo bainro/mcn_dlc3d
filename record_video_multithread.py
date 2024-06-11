@@ -38,10 +38,12 @@ def cam_worker(cam_id, vid_name, fps, q):
     # open the webcam file / stream
     if os.name == 'nt':
         cam = cv2.VideoCapture(cam_id, cv2.CAP_DSHOW)
+        cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
     else:
         cam = cv2.VideoCapture(cam_id)
-    cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
-    # cam.set(cv2.CAP_PROP_FPS, fps)
+        cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+        # causes 30FPS bug on windows: https://tinyurl.com/5n8vncuy
+        cam.set(cv2.CAP_PROP_FPS, fps)
     assert cam.isOpened(), "camera failed to open"
     
     fourcc = cv2.VideoWriter_fourcc(*'XVID')

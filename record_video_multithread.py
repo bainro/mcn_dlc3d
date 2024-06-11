@@ -131,7 +131,7 @@ if __name__ == "__main__":
     qs = []
     vid_files = []
     m = mp.Manager()
-    cam_pool = mp.Pool(n_proc)
+    cam_pool = mp.Pool(num_cams)
     for c_i in cam_ids:
         q = m.Queue()
         qs.append(q)    

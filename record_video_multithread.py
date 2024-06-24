@@ -114,6 +114,7 @@ if __name__ == "__main__":
             ret, frame = vid.read()
             cv2.putText(frame, f"{c+1}", (100, 100), font, 3, (255, 255, 255), 8)
             cv2.imshow(f"camera #{c+1}. (press q to quit)", frame) 
+            del frame
         if cv2.waitKey(1) & 0xFF == ord('q'): 
             break
 

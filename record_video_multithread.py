@@ -109,12 +109,16 @@ if __name__ == "__main__":
     font = cv2.FONT_HERSHEY_SIMPLEX
     # show all cameras 
     while(True): 
+        combined = None
         for c in range(len(cams)):
             vid = cams[c]
             ret, frame = vid.read()
             cv2.putText(frame, f"{c+1}", (100, 100), font, 3, (255, 255, 255), 8)
-            cv2.imshow(f"camera #{c+1}. (press q to quit)", frame) 
-            del frame
+            if type(combined) == type(None):
+                combined = frame
+            else:
+                combined = np.concatenate((combined, frame), axis=1)
+        cv2.imshow(f"camera #{c+1}. (press q to quit)", combined) 
         if cv2.waitKey(1) & 0xFF == ord('q'): 
             break
 

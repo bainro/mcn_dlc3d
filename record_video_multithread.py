@@ -170,11 +170,12 @@ if __name__ == "__main__":
             if not frame_i % FPS:
                 now = datetime.datetime.now().strftime("%H:%M:%S")
                 log.write(f'{now}\n')
-                print(f'{frame_i} frames recorded!')
+                # print(f'{frame_i} frames recorded!')
                 now = time.time()
                 if last_time != None:
                     elapsed = now - last_time
-                    print(f'last {FPS} frames took {elapsed:.1f} seconds\n')
+                    # print(f'last {FPS} frames took {elapsed:.1f} seconds\n')
+                    print(f'recording at ~{FPS / elapsed:.1f} FPS')
                 last_time = now
         
                 potential_key = cv2.waitKey(1)

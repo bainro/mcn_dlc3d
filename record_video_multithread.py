@@ -124,6 +124,7 @@ if __name__ == "__main__":
         cv2.imshow(f"cameras. (press q to quit)", combined) 
         if cv2.waitKey(1) & 0xFF == ord('q'): 
             break
+        time.sleep(0.5) # fix for Janina's PC's weird glitch
 
     cv2.destroyAllWindows() 
     

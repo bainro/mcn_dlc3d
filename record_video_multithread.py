@@ -3,6 +3,7 @@ import cv2
 import time
 import queue
 import shutil
+import random
 import datetime
 import tempfile
 import numpy as np
@@ -39,12 +40,15 @@ def cam_worker(cam_id, vid_name, fps, q):
     if os.name == 'nt':
         cam = cv2.VideoCapture(cam_id, cv2.CAP_DSHOW)
         cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+        # cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25) # @TODO remove
     else:
         cam = cv2.VideoCapture(cam_id)
         cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         # causes 30FPS bug on windows: https://tinyurl.com/5n8vncuy
         cam.set(cv2.CAP_PROP_FPS, fps)
     assert cam.isOpened(), "camera failed to open"
+    cam.set(cv2.CAP_PROP_AUTOFOCUS, 1) # @TODO remove!
+    cam.set(cv2.CAP_PROP_FOCUS, 255) # (focus % 255) + 1) # @TODO remove!
     
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     w = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -71,9 +75,9 @@ def cam_worker(cam_id, vid_name, fps, q):
             vid.write(current_frame)
  
         # @TODO remove. just testing
-        focus += 5
-        cam.set(cv2.CAP_PROP_FOCUS, focus % 60)
+        focus += 1
         ret, current_frame = cam.read()
+        # cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25) # @TODO remove
         assert ret, "camera thread worker crashed :("
 
 if __name__ == "__main__":
@@ -100,6 +104,7 @@ if __name__ == "__main__":
     while(i < 10): 
         if os.name == 'nt':
             temp_camera = cv2.VideoCapture(i, cv2.CAP_DSHOW)
+            # temp_camera.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25) # @TODO remove
         else:
             temp_camera = cv2.VideoCapture(i)
         is_cam = temp_camera.isOpened()
@@ -117,6 +122,15 @@ if __name__ == "__main__":
         for c in range(len(cams)):
             vid = cams[c]
             ret, frame = vid.read()
+            #vid.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25) # @TODO remove
+            #vid.set(cv2.CAP_PROP_EXPOSURE, 2) # @TODO remove
+            # vid.set(cv2.CAP_PROP_FOCUS, int(random.random() * 255) + 1) # @TODO remove
+            #print(vid.get(cv2.CAP_PROP_AUTOFOCUS)) # @TODO remove!
+            #vid.set(cv2.CAP_PROP_AUTOFOCUS, 0) # @TODO remove!
+            # vid.set(cv2.CAP_PROP_AUTOFOCUS, 1) # @TODO remove!
+            #time.sleep(1)
+            #print(vid.get(cv2.CAP_PROP_AUTOFOCUS)) # @TODO remove!
+            # assert False # @TODO remove!
             frame = frame.copy()
             frame = cv2.resize(frame, (150, 150))
             cv2.putText(frame, f"{c+1}", (30, 70), font, 3, (255, 255, 255), 8)

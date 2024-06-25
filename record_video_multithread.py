@@ -55,6 +55,7 @@ def cam_worker(cam_id, vid_name, fps, q):
     for _ in range(10):
         ret, current_frame = cam.read()
     
+    focus = 0 # @TODO remove. just testing
     while True:
         msg = None
         try:
@@ -69,6 +70,9 @@ def cam_worker(cam_id, vid_name, fps, q):
         elif msg == "capture":
             vid.write(current_frame)
  
+        # @TODO remove. just testing
+        focus += 5
+        cam.set(cv2.CAP_PROP_FOCUS, focus % 60)
         ret, current_frame = cam.read()
         assert ret, "camera thread worker crashed :("
 
@@ -114,8 +118,7 @@ if __name__ == "__main__":
             vid = cams[c]
             ret, frame = vid.read()
             frame = frame.copy()
-            #h, w, _c = frame.shape
-            frame = cv2.resize(frame, (150, 150)) 
+            frame = cv2.resize(frame, (150, 150))
             cv2.putText(frame, f"{c+1}", (30, 70), font, 3, (255, 255, 255), 8)
             if type(combined) == type(None):
                 combined = frame
@@ -124,7 +127,7 @@ if __name__ == "__main__":
         cv2.imshow(f"cameras. (press q to quit)", combined) 
         if cv2.waitKey(1) & 0xFF == ord('q'): 
             break
-        time.sleep(0.5) # fix for Janina's PC's weird glitch
+        time.sleep(0.5)
 
     cv2.destroyAllWindows() 
     

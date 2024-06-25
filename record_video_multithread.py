@@ -74,8 +74,6 @@ def cam_worker(cam_id, vid_name, fps, q):
         elif msg == "capture":
             vid.write(current_frame)
  
-        # @TODO remove. just testing
-        focus += 1
         ret, current_frame = cam.read()
         # cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25) # @TODO remove
         assert ret, "camera thread worker crashed :("
@@ -104,7 +102,6 @@ if __name__ == "__main__":
     while(i < 10): 
         if os.name == 'nt':
             temp_camera = cv2.VideoCapture(i, cv2.CAP_DSHOW)
-            # temp_camera.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25) # @TODO remove
         else:
             temp_camera = cv2.VideoCapture(i)
         is_cam = temp_camera.isOpened()
@@ -130,7 +127,7 @@ if __name__ == "__main__":
             # vid.set(cv2.CAP_PROP_AUTOFOCUS, 1) # @TODO remove!
             #time.sleep(1)
             #print(vid.get(cv2.CAP_PROP_AUTOFOCUS)) # @TODO remove!
-            # assert False # @TODO remove!
+            #assert False # @TODO remove!
             frame = frame.copy()
             frame = cv2.resize(frame, (150, 150))
             cv2.putText(frame, f"{c+1}", (30, 70), font, 3, (255, 255, 255), 8)

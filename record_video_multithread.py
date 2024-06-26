@@ -47,8 +47,8 @@ def cam_worker(cam_id, vid_name, fps, q):
         # causes 30FPS bug on windows: https://tinyurl.com/5n8vncuy
         cam.set(cv2.CAP_PROP_FPS, fps)
     assert cam.isOpened(), "camera failed to open"
-    cam.set(cv2.CAP_PROP_AUTOFOCUS, 1) # @TODO remove!
-    cam.set(cv2.CAP_PROP_FOCUS, 255) # (focus % 255) + 1) # @TODO remove!
+    # cam.set(cv2.CAP_PROP_AUTOFOCUS, 1) # @TODO remove!
+    # cam.set(cv2.CAP_PROP_FOCUS, 255) # (focus % 255) + 1) # @TODO remove!
     
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     w = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -58,8 +58,7 @@ def cam_worker(cam_id, vid_name, fps, q):
     # first few frames are way earlier wrt correct, later frames
     for _ in range(10):
         ret, current_frame = cam.read()
-    
-    focus = 0 # @TODO remove. just testing
+        
     while True:
         msg = None
         try:
@@ -75,7 +74,6 @@ def cam_worker(cam_id, vid_name, fps, q):
             vid.write(current_frame)
  
         ret, current_frame = cam.read()
-        # cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25) # @TODO remove
         assert ret, "camera thread worker crashed :("
 
 if __name__ == "__main__":
@@ -119,15 +117,6 @@ if __name__ == "__main__":
         for c in range(len(cams)):
             vid = cams[c]
             ret, frame = vid.read()
-            #vid.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25) # @TODO remove
-            #vid.set(cv2.CAP_PROP_EXPOSURE, 2) # @TODO remove
-            # vid.set(cv2.CAP_PROP_FOCUS, int(random.random() * 255) + 1) # @TODO remove
-            #print(vid.get(cv2.CAP_PROP_AUTOFOCUS)) # @TODO remove!
-            #vid.set(cv2.CAP_PROP_AUTOFOCUS, 0) # @TODO remove!
-            # vid.set(cv2.CAP_PROP_AUTOFOCUS, 1) # @TODO remove!
-            #time.sleep(1)
-            #print(vid.get(cv2.CAP_PROP_AUTOFOCUS)) # @TODO remove!
-            #assert False # @TODO remove!
             frame = frame.copy()
             frame = cv2.resize(frame, (150, 150))
             cv2.putText(frame, f"{c+1}", (30, 70), font, 3, (255, 255, 255), 8)

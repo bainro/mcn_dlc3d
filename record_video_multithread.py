@@ -40,21 +40,20 @@ def cam_worker(cam_id, vid_name, fps, q):
     if os.name == 'nt':
         cam = cv2.VideoCapture(cam_id, cv2.CAP_DSHOW)
         cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
-        # cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25) # @TODO remove
     else:
         cam = cv2.VideoCapture(cam_id)
         cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         # causes 30FPS bug on windows: https://tinyurl.com/5n8vncuy
         cam.set(cv2.CAP_PROP_FPS, fps)
     assert cam.isOpened(), "camera failed to open"
-    # cam.set(cv2.CAP_PROP_AUTOFOCUS, 1) # @TODO remove!
-    # cam.set(cv2.CAP_PROP_FOCUS, 255) # (focus % 255) + 1) # @TODO remove!
+    focus = 290
+    cam.set(cv2.CAP_PROP_AUTOFOCUS, 0.25)
+    cam.set(cv2.CAP_PROP_FOCUS, focus)
     
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     w = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
     h = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
     vid = cv2.VideoWriter(vid_name, fourcc, fps, (w, h)) 
-
     # first few frames are way earlier wrt correct, later frames
     for _ in range(10):
         ret, current_frame = cam.read()
@@ -74,6 +73,7 @@ def cam_worker(cam_id, vid_name, fps, q):
             vid.write(current_frame)
  
         ret, current_frame = cam.read()
+        cam.set(cv2.CAP_PROP_FOCUS, focus)
         assert ret, "camera thread worker crashed :("
 
 if __name__ == "__main__":
@@ -109,37 +109,37 @@ if __name__ == "__main__":
         i += 1
 
     print(f'Number of cameras detected: {len(cams)}')
+    #assert len(cams) >= 5, 'not enough cameras detected!'
 
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    # show all cameras 
-    while(True): 
-        combined = None
-        for c in range(len(cams)):
+    # show each camera & ask which one it is
+    # accept 1-5 and blank (extra camera) as answers
+    cam_ids = []
+    for c in range(len(cams)):
+        while(True):
             vid = cams[c]
             ret, frame = vid.read()
             frame = frame.copy()
             frame = cv2.resize(frame, (150, 150))
-            cv2.putText(frame, f"{c+1}", (30, 70), font, 3, (255, 255, 255), 8)
-            if type(combined) == type(None):
-                combined = frame
-            else:
-                combined = np.concatenate((combined, frame), axis=1)
-        cv2.imshow(f"cameras. (press q to quit)", combined) 
-        if cv2.waitKey(1) & 0xFF == ord('q'): 
-            break
-        time.sleep(0.5)
-
-    cv2.destroyAllWindows() 
+            cv2.imshow("Which camera number?. (press q to quit)", frame) 
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                cam_num = input('Which camera # is this? Leave blank if it is an extra, unused camera\n')
+                valid_response = False
+                valid_response = valid_response or cam_num == '1'
+                valid_response = valid_response or cam_num == '2'
+                valid_response = valid_response or cam_num == '3'
+                valid_response = valid_response or cam_num == '4'
+                valid_response = valid_response or cam_num == '5'
+                valid_response = valid_response or cam_num == ""
+                assert valid_response, f'{cam_num} is an invalid response'
+                if cam_num != "":
+                    cam_ids.append(int(cam_num)-1)
+                cv2.destroyAllWindows() 
+                break
     
     for c in cams:
         c.release()
     del cams
-
-    cam_ids = []
-    num_cams = int(input("How many cameras do you want to setup? "))
-    for cam in range(num_cams):   
-        cam_id = int(input(f"which camera is #{cam+1}? "))
-        cam_ids.append(cam_id-1)
+    num_cams = len(cam_ids)
 
     # list of camera workers and their queues
     qs = []
@@ -179,7 +179,7 @@ if __name__ == "__main__":
             for q in qs:
                 q.put("capture")
             frame_i += 1
-            if not frame_i % FPS:
+            if frame_i % FPS == 0:
                 now = datetime.datetime.now().strftime("%H:%M:%S")
                 log.write(f'{now}\n')
                 # print(f'{frame_i} frames recorded!')
@@ -218,3 +218,48 @@ if __name__ == "__main__":
     print(f"Time to fix video FPS: {time.time() - start_time:.1f} seconds")
 
     cv2.destroyAllWindows()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
+font = cv2.FONT_HERSHEY_SIMPLEX
+# show all cameras 
+while(True): 
+    combined = None
+    for c in range(len(cams)):
+        vid = cams[c]
+        ret, frame = vid.read()
+        frame = frame.copy()
+        frame = cv2.resize(frame, (150, 150))
+        cv2.putText(frame, f"{c+1}", (30, 70), font, 3, (255, 255, 255), 8)
+        if type(combined) == type(None):
+            combined = frame
+        else:
+            combined = np.concatenate((combined, frame), axis=1)
+    cv2.imshow("cameras. (press q to quit)", combined) 
+    if cv2.waitKey(1) & 0xFF == ord('q'): 
+        break
+    time.sleep(0.05)
+
+cv2.destroyAllWindows() 
+'''

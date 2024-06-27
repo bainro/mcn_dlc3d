@@ -190,10 +190,19 @@ if __name__ == "__main__":
         mp.set_start_method('spawn')
     except:
         pass
+    
+    save_dir = "recorded_videos"
+    if gui:
+        print("\nA dialog box should appear. It might be in the background")
+        save_dir = filedialog.askdirectory(title="Select directory to save outputs")
+        # windows ('nt') vs linux
+        if os.name == 'nt':
+            gui_root.attributes('-topmost', True, '-alpha', 0)
+        os.makedirs(save_dir, exist_ok=True)
+        save_dir = os.path.abspath(save_dir)
 
     record_time = datetime.datetime.now()
     record_time = record_time.strftime('%Y-%m-%d_%H-%M-%S')
-    save_dir = "recorded_videos"
     save_dir = os.path.join(save_dir, record_time)
     os.makedirs(save_dir, exist_ok=True)
 

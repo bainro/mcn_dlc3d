@@ -12,6 +12,19 @@ import threading
 import subprocess
 import numpy as np
 import multiprocessing as mp
+# fallback to cmd line prompts when gui not available
+try:
+    gui = True
+    import tkinter as tk
+    from tkinter import filedialog
+    gui_root = tk.Tk()
+    # windows ('nt') vs linux
+    if os.name == 'nt':
+        gui_root.attributes('-topmost', True, '-alpha', 0)
+    else:
+        gui_root.withdraw()
+except:
+    gui = False
 
 # simple error callback for debugging processes
 def ecb(e):

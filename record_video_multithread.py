@@ -1,11 +1,15 @@
 import os
+os.environ["OPENCV_LOG_LEVEL"]="FATAL"
 import cv2 
+import sys
 import time
 import queue
 import shutil
 import random
 import datetime
 import tempfile
+import threading
+import subprocess
 import numpy as np
 import multiprocessing as mp
 
@@ -47,8 +51,8 @@ def cam_worker(cam_id, vid_name, fps, q):
         cam.set(cv2.CAP_PROP_FPS, fps)
     assert cam.isOpened(), "camera failed to open"
     focus = 290
-    cam.set(cv2.CAP_PROP_AUTOFOCUS, 0.25)
-    cam.set(cv2.CAP_PROP_FOCUS, focus)
+    # cam.set(cv2.CAP_PROP_AUTOFOCUS, 0.25)
+    # cam.set(cv2.CAP_PROP_FOCUS, focus)
     
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     w = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -57,7 +61,7 @@ def cam_worker(cam_id, vid_name, fps, q):
     # first few frames are way earlier wrt correct, later frames
     for _ in range(10):
         ret, current_frame = cam.read()
-        
+
     while True:
         msg = None
         try:
@@ -71,10 +75,99 @@ def cam_worker(cam_id, vid_name, fps, q):
             break
         elif msg == "capture":
             vid.write(current_frame)
- 
+
         ret, current_frame = cam.read()
-        cam.set(cv2.CAP_PROP_FOCUS, focus)
-        assert ret, "camera thread worker crashed :("
+        ### BREAKS THINGS ON JANINA/MIKKO PC
+        # cam.set(cv2.CAP_PROP_FOCUS, focus)
+        assert ret, "camera thread worker crashed :("        
+
+def record(num_cams, cam_sys_ids, save_dir, FPS, main_q):
+    # list of camera workers and their queues
+    qs = []
+    vid_files = []
+    m = mp.Manager()
+    cam_pool = mp.Pool(num_cams)
+    for c_i in cam_ids:
+        q = m.Queue()
+        qs.append(q)    
+        # create a camera worker
+        sys_id = cam_sys_ids[c_i]
+        vname = os.path.join(save_dir, f'camera_{c_i}.avi')
+        vid_files.append(vname)
+        w_args = (sys_id, vname, FPS, q)
+        cam_pool.apply_async(func=cam_worker, args=w_args, error_callback=ecb)
+
+    # let camera workers setup (e.g. throw away 1st few frames)
+    print("Initializing...")
+    time.sleep(2)
+    print("Recording started!")
+    print()
+    print("You can open the video files and skip to the end to check on the progress.")
+    print("The end of the video will not update automatically, but will require closing")
+    print("and re-opening the video file. Note the FPS will likely be wrong. This is ")
+    print("corrected post-recording.")
+    
+    frame_i = 0
+    last_time = None
+    start_time = time.time()
+
+    print()
+    print("Press ENTER to stop recording.")
+    print()
+
+    msg = None
+    todays_date = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    log_file = os.path.join(save_dir, f'{todays_date}_every_{FPS}_frames.log')
+    with open(log_file, 'w') as log:
+        while(True): 
+            # only add more capture commands if they've finished the old ones
+            qs_empty = True
+            for q in qs:
+                qs_empty = qs_empty and q.empty()
+            if not qs_empty:
+                continue
+            # tell all the cameras to record the latest image
+            for q in qs:
+                q.put("capture")
+            frame_i += 1
+            if frame_i % FPS == 0:
+                now = datetime.datetime.now().strftime("%H:%M:%S")
+                log.write(f'{now}\n')
+                # print(f'{frame_i} frames recorded!')
+                now = time.time()
+                if last_time != None:
+                    elapsed = now - last_time
+                    # print(f'recording at ~{FPS / elapsed:.1f} FPS')
+                last_time = now
+
+            try:
+                msg = main_q.get_nowait()
+            except:
+                pass
+            if msg == "stop":
+                for q in qs:
+                    q.put("stop")
+                # wait for all the cameras and videos to be released
+                cam_pool.close()
+                cam_pool.join()
+                del cam_pool 
+                break
+    
+    elapsed_t = time.time() - start_time
+    print(f"True seconds recorded: {elapsed_t:.1f}")
+    true_fps = round(frame_i / elapsed_t)
+    print(f"True FPS: {true_fps:.1f}")
+
+    print("Fixing recorded video's FPS...")
+    start_time = time.time()
+
+    fps_pool = mp.Pool(num_cams)
+    for vid_name in vid_files:
+        args = [vid_name, true_fps]
+        fps_pool.apply_async(func=fps_worker, args=args, error_callback=ecb)
+    fps_pool.close()
+    fps_pool.join()
+    print(f"Time to fix video FPS: {time.time() - start_time:.1f} seconds")
 
 if __name__ == "__main__":
     # extra safe cleanup 
@@ -109,114 +202,48 @@ if __name__ == "__main__":
         i += 1
 
     print(f'Number of cameras detected: {len(cams)}')
-    #assert len(cams) >= 5, 'not enough cameras detected!'
+    assert len(cams) >= 5, 'not enough cameras detected!'
 
     # show each camera & ask which one it is
     # accept 1-5 and blank (extra camera) as answers
     cam_ids = []
     for c in range(len(cams)):
-        while(True):
-            vid = cams[c]
-            ret, frame = vid.read()
-            frame = frame.copy()
-            frame = cv2.resize(frame, (150, 150))
-            cv2.imshow("Which camera number?. (press q to quit)", frame) 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                cam_num = input('Which camera # is this? Leave blank if it is an extra, unused camera\n')
-                valid_response = False
-                valid_response = valid_response or cam_num == '1'
-                valid_response = valid_response or cam_num == '2'
-                valid_response = valid_response or cam_num == '3'
-                valid_response = valid_response or cam_num == '4'
-                valid_response = valid_response or cam_num == '5'
-                valid_response = valid_response or cam_num == ""
-                assert valid_response, f'{cam_num} is an invalid response'
-                if cam_num != "":
-                    cam_ids.append(int(cam_num)-1)
-                cv2.destroyAllWindows() 
-                break
+        vid = cams[c]
+        ret, frame = vid.read()
+        img_path = os.path.join(os.getcwd(), "cam_test.png")
+        cv2.imwrite(img_path, frame)
+        native_image_app = {'linux':'xdg-open',
+                                  'win32':'explorer',
+                                  'darwin':'open'}[sys.platform]
+        subprocess.Popen([native_image_app, img_path])
+        cam_num = input('Which camera # is this picture from? Leave blank if it is an extra, unused camera\n')
+        valid_response = False
+        valid_response = valid_response or cam_num == '1'
+        valid_response = valid_response or cam_num == '2'
+        valid_response = valid_response or cam_num == '3'
+        valid_response = valid_response or cam_num == '4'
+        valid_response = valid_response or cam_num == '5'
+        valid_response = valid_response or cam_num == ""
+        assert valid_response, f'{cam_num} is an invalid response'
+        if cam_num != "":
+            cam_ids.append(int(cam_num)-1)
     
     for c in cams:
         c.release()
     del cams
     num_cams = len(cam_ids)
 
-    # list of camera workers and their queues
-    qs = []
-    vid_files = []
-    m = mp.Manager()
-    cam_pool = mp.Pool(num_cams)
-    for c_i in cam_ids:
-        q = m.Queue()
-        qs.append(q)    
-        # create a camera worker
-        sys_id = cam_sys_ids[c_i]
-        vname = os.path.join(save_dir, f'camera_{c_i}.avi')
-        vid_files.append(vname)
-        w_args = (sys_id, vname, FPS, q)
-        cam_pool.apply_async(func=cam_worker, args=w_args, error_callback=ecb)
-
-    # let camera workers setup (e.g. throw away 1st few frames)
-    time.sleep(2)
-    
-    frame_i = 0
-    last_time = None
-    start_time = time.time()
-
-    cv2.imshow("PRESS 'q' TO STOP RECORDING", np.zeros((240,240,3)))
-
-    todays_date = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    log_file = os.path.join(save_dir, f'{todays_date}_every_{FPS}_frames.log')
-    with open(log_file, 'w') as log:
-        while(True): 
-            # only add more capture commands if they've finished the old ones
-            qs_empty = True
-            for q in qs:
-                qs_empty = qs_empty and q.empty()
-            if not qs_empty:
-                continue
-            # tell all the cameras to record the latest image
-            for q in qs:
-                q.put("capture")
-            frame_i += 1
-            if frame_i % FPS == 0:
-                now = datetime.datetime.now().strftime("%H:%M:%S")
-                log.write(f'{now}\n')
-                # print(f'{frame_i} frames recorded!')
-                now = time.time()
-                if last_time != None:
-                    elapsed = now - last_time
-                    # print(f'last {FPS} frames took {elapsed:.1f} seconds\n')
-                    print(f'recording at ~{FPS / elapsed:.1f} FPS')
-                last_time = now
-        
-                potential_key = cv2.waitKey(1)
-                if potential_key & 0xFF == ord('q'):
-                    cv2.destroyAllWindows()
-                    for q in qs:
-                        q.put("stop")
-                    # wait for all the cameras and videos to be released
-                    cam_pool.close()
-                    cam_pool.join()
-                    del cam_pool              
-                    break
-        
-    elapsed_t = time.time() - start_time
-    print(f"True seconds recorded: {elapsed_t:.1f}")
-    true_fps = round(frame_i / elapsed_t)
-    print(f"True FPS: {true_fps:.1f}")
-
-    print("Fixing recorded video's FPS...")
-    start_time = time.time()
-
-    fps_pool = mp.Pool(num_cams)
-    for vid_name in vid_files:
-        args = [vid_name, true_fps]
-        fps_pool.apply_async(func=fps_worker, args=args, error_callback=ecb)
-    fps_pool.close()
-    fps_pool.join()
-    print(f"Time to fix video FPS: {time.time() - start_time:.1f} seconds")
-
+    # thread and queue allows us to get user input w/o hogging CPU
+    q = queue.Queue()
+    w_args = (num_cams, cam_sys_ids, save_dir, FPS, q)
+    rec_th = threading.Thread(target=record, args=w_args, daemon=False)
+    # start the parallel worker thread
+    rec_th.start()
+    input("") # wait for user to press ENTER
+    print("\nShutting down recording... wait for post-processing to finish\n")
+    q.put("stop")
+    rec_th.join()
+    print("\nDONE!")
     cv2.destroyAllWindows()
 
 

@@ -56,6 +56,7 @@ def cam_worker(cam_id, vid_name, fps, q):
     # open the webcam file / stream
     if os.name == 'nt':
         cam = cv2.VideoCapture(cam_id, cv2.CAP_DSHOW)
+        # cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0)
         cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
     else:
         cam = cv2.VideoCapture(cam_id)
@@ -63,9 +64,16 @@ def cam_worker(cam_id, vid_name, fps, q):
         # causes 30FPS bug on windows: https://tinyurl.com/5n8vncuy
         cam.set(cv2.CAP_PROP_FPS, fps)
     assert cam.isOpened(), "camera failed to open"
-    focus = 290
-    # cam.set(cv2.CAP_PROP_AUTOFOCUS, 0.25)
+    
+    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    cam.set(cv2.CAP_PROP_FPS, 30)
+    focus = 0.5
+    # cam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+    # cam.set(cv2.CAP_PROP_SETTINGS, 1)
     # cam.set(cv2.CAP_PROP_FOCUS, focus)
+    # from -2 (bright) to -11 (dark) for c920
+    # cam.set(cv2.CAP_PROP_EXPOSURE, -2)
     
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     w = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -90,8 +98,10 @@ def cam_worker(cam_id, vid_name, fps, q):
             vid.write(current_frame)
 
         ret, current_frame = cam.read()
-        ### BREAKS THINGS ON JANINA/MIKKO PC
         # cam.set(cv2.CAP_PROP_FOCUS, focus)
+        # print(cam.get(cv2.CAP_PROP_AUTOFOCUS))
+        # print(cam.get(cv2.CAP_PROP_FOCUS))
+        # print(cam.get(cv2.CAP_PROP_EXPOSURE))
         assert ret, "camera thread worker crashed :("        
 
 def record(num_cams, cam_sys_ids, save_dir, FPS, main_q):
@@ -150,7 +160,7 @@ def record(num_cams, cam_sys_ids, save_dir, FPS, main_q):
                 now = time.time()
                 if last_time != None:
                     elapsed = now - last_time
-                    # print(f'recording at ~{FPS / elapsed:.1f} FPS')
+                    print(f'recording at {FPS / elapsed:.1f} FPS')
                 last_time = now
 
             try:
@@ -224,11 +234,11 @@ if __name__ == "__main__":
         i += 1
 
     print(f'Number of cameras detected: {len(cams)}')
-    assert len(cams) >= 5, 'not enough cameras detected!'
+    # assert len(cams) >= 5, 'not enough cameras detected!'
 
     # show each camera & ask which one it is
     # accept 1-5 and blank (extra camera) as answers
-    cam_ids = []
+    cam_ids = [None, None, None, None, None]
     for c in range(len(cams)):
         vid = cams[c]
         ret, frame = vid.read()
@@ -248,8 +258,12 @@ if __name__ == "__main__":
         valid_response = valid_response or cam_num == ""
         assert valid_response, f'{cam_num} is an invalid response'
         if cam_num != "":
-            cam_ids.append(int(cam_num)-1)
+            cam_ids[int(cam_num)-1] = c
     
+    for i, v in enumerate(cam_ids[::-1]):
+        if v == None:
+            del cam_ids[4-i]
+
     for c in cams:
         c.release()
     del cams

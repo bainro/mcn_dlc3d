@@ -6,12 +6,13 @@ import time
 import queue
 import shutil
 import random
-import datetime
+import datetime   
 import tempfile
 import threading
 import subprocess
 import numpy as np
 import multiprocessing as mp
+from pynput.keyboard import Key, Controller
 # fallback to cmd line prompts when gui not available
 try:
     gui = True
@@ -25,6 +26,8 @@ try:
         gui_root.withdraw()
 except:
     gui = False
+
+keyboard = Controller()
 
 # simple error callback for debugging processes
 def ecb(e):
@@ -46,7 +49,7 @@ def fps_worker(wrong_fps_vid, true_fps):
             fixed_vid.write(frame)
         else:
             vid.release()
-            fixed_vid.release()
+            fixed_vid.release()  
             os.remove(wrong_fps_vid)
             shutil.move(temp_file, wrong_fps_vid)
             break
@@ -65,9 +68,10 @@ def cam_worker(cam_id, vid_name, fps, q):
         cam.set(cv2.CAP_PROP_FPS, fps)
     assert cam.isOpened(), "camera failed to open"
     
-    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-    cam.set(cv2.CAP_PROP_FPS, 30)
+    if cam_id == 6:
+        cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        cam.set(cv2.CAP_PROP_FPS, 30)
     focus = 0.5
     # cam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
     # cam.set(cv2.CAP_PROP_SETTINGS, 1)
@@ -137,6 +141,8 @@ def record(num_cams, cam_sys_ids, save_dir, FPS, main_q):
     print()
     print("Press ENTER to stop recording.")
     print()
+    print("Please stay on this window for 10 seconds to ensure consistent FPS")
+    print()
 
     msg = None
     todays_date = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -154,6 +160,12 @@ def record(num_cams, cam_sys_ids, save_dir, FPS, main_q):
                 q.put("capture")
             frame_i += 1
             if frame_i % FPS == 0:
+                # Quick fix for low FPS often at the start of recording or no cmdline output flushing
+                # both of which could be magically solved by pressing the SPACEBAR... So we fake it :)
+                if frame_i < 300:
+                    # Press and release space
+                    keyboard.press(Key.space)
+                    keyboard.release(Key.space)
                 now = datetime.datetime.now().strftime("%H:%M:%S")
                 log.write(f'{now}\n')
                 # print(f'{frame_i} frames recorded!')
@@ -238,7 +250,7 @@ if __name__ == "__main__":
 
     # show each camera & ask which one it is
     # accept 1-5 and blank (extra camera) as answers
-    cam_ids = [None, None, None, None, None]
+    cam_ids = [None, None, None, None, None, None]
     for c in range(len(cams)):
         vid = cams[c]
         ret, frame = vid.read()
@@ -248,13 +260,15 @@ if __name__ == "__main__":
                                   'win32':'explorer',
                                   'darwin':'open'}[sys.platform]
         subprocess.Popen([native_image_app, img_path])
-        cam_num = input('Which camera # is this picture from? Leave blank if it is an extra, unused camera\n')
+        cam_num = input('Which camera # is this picture from? Press SPACEBAR then ENTER to skip this camera\n')
+        cam_num = cam_num.strip() # remove whitespace characters
         valid_response = False
         valid_response = valid_response or cam_num == '1'
         valid_response = valid_response or cam_num == '2'
         valid_response = valid_response or cam_num == '3'
         valid_response = valid_response or cam_num == '4'
         valid_response = valid_response or cam_num == '5'
+        valid_response = valid_response or cam_num == '6'
         valid_response = valid_response or cam_num == ""
         assert valid_response, f'{cam_num} is an invalid response'
         if cam_num != "":
@@ -262,7 +276,7 @@ if __name__ == "__main__":
     
     for i, v in enumerate(cam_ids[::-1]):
         if v == None:
-            del cam_ids[4-i]
+            del cam_ids[5-i]
 
     for c in cams:
         c.release()

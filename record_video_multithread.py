@@ -145,6 +145,7 @@ def record(num_cams, cam_sys_ids, save_dir, FPS, main_q):
     print()
 
     msg = None
+    true_fps = None
     todays_date = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     log_file = os.path.join(save_dir, f'{todays_date}_every_{FPS}_frames.log')
     with open(log_file, 'w') as log:
@@ -184,15 +185,18 @@ def record(num_cams, cam_sys_ids, save_dir, FPS, main_q):
                     q.put("stop")
                 # wait for all the cameras and videos to be released
                 cam_pool.close()
+                elapsed_t = time.time() - start_time
+                print(f"True seconds recorded: {elapsed_t:.1f}")
+                true_fps = round(frame_i / elapsed_t)
+                print(f"True FPS: {true_fps:.1f}")
+                log.write(f'FPS: {true_fps:.1f}\n')
                 cam_pool.join()
                 del cam_pool 
                 break
-    
-    elapsed_t = time.time() - start_time
-    print(f"True seconds recorded: {elapsed_t:.1f}")
-    true_fps = round(frame_i / elapsed_t)
-    print(f"True FPS: {true_fps:.1f}")
 
+    # post-processing takes too long & uses a lot of CPU
+    # will create a separate script to do this for all specified videos.
+    '''
     print("Fixing recorded video's FPS...")
     start_time = time.time()
 
@@ -203,6 +207,7 @@ def record(num_cams, cam_sys_ids, save_dir, FPS, main_q):
     fps_pool.close()
     fps_pool.join()
     print(f"Time to fix video FPS: {time.time() - start_time:.1f} seconds")
+    '''
 
 if __name__ == "__main__":
     # extra safe cleanup 
@@ -222,6 +227,7 @@ if __name__ == "__main__":
             gui_root.attributes('-topmost', True, '-alpha', 0)
         os.makedirs(save_dir, exist_ok=True)
         save_dir = os.path.abspath(save_dir)
+    gui_root.destroy()
 
     record_time = datetime.datetime.now()
     record_time = record_time.strftime('%Y-%m-%d_%H-%M-%S')
